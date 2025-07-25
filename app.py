@@ -523,9 +523,9 @@ def handle_disconnect():
     print(f'Client disconnected: {request.sid}')
 
 if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
     print("🚀 Starting Enhanced YouTube Downloader...")
-    print("📱 Open your browser and go to: http://localhost:5000")
-    print("🛑 Press Ctrl+C to stop the server")
+    print(f"📱 Server running on port {port}")
     print("\n✨ Features:")
     print("  - Detects ALL available video qualities")
     print("  - Shows highest available quality first")
@@ -533,4 +533,4 @@ if __name__ == '__main__':
     print("  - Improved error handling and debugging")
     print("  - Real-time progress updates")
     
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=port)
