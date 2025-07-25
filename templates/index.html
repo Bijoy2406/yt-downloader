@@ -361,7 +361,13 @@
     </div>
 
     <script>
-        const socket = io();
+        const socket = io({
+            transports: ['websocket', 'polling'],
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5,
+            timeout: 60000
+        });
         let currentVideoInfo = null;
         let selectedFormat = null;
         let selectedQuality = null;

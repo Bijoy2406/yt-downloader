@@ -11,7 +11,13 @@ import mimetypes
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, 
+                   cors_allowed_origins="*", 
+                   async_mode='eventlet',
+                   ping_timeout=60,
+                   ping_interval=25,
+                   max_http_buffer_size=10E7,
+                   async_handlers=True)
 
 # Create downloads directory
 DOWNLOAD_DIR = 'downloads'
