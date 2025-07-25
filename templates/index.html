@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .url-input-section {
+            margin-bottom: 30px;
+        }
+        
+                .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .url-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .video-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .video-info.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .video-thumbnail {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .video-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .video-details {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .format-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .format-group {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .format-group h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .format-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .format-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .format-option:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+        }
+        
+        .format-option input[type="radio"] {
+            margin: 0;
+        }
+        
+        .progress-section {
+            display: none;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .progress-section.show {
+            display: block;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #56ab2f, #a8e6cf);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 10px;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .progress-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2e7d32;
+        }
+        
+        .download-complete {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .download-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .download-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .format-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .progress-details {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎥 YouTube Downloader</h1>
+            <p>Download videos, audio, and playlists with ease</p>
+        </div>
+        
+        <div class="content">
+            <div class="url-input-section">
+                <div class="input-group">
+                    <input type="text" id="urlInput" class="url-input" placeholder="Paste YouTube URL here..." />
+                    <button id="getInfoBtn" class="btn btn-primary">Get Video Info</button>
+                </div>
+            </div>
+            
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            
+            <div id="videoInfo" class="video-info">
+                <div id="videoDetails"></div>
+                
+                <div class="format-selection">
+                    <div class="format-group">
+                        <h3>📹 Video Quality</h3>
+                        <div id="videoFormats" class="format-options"></div>
+                    </div>
+                    
+                    <div class="format-group">
+                        <h3>🎵 Audio Quality</h3>
+                        <div id="audioFormats" class="format-options"></div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button id="downloadBtn" class="btn btn-success">Start Download</button>
+                    <button id="cancelBtn" class="btn btn-primary" style="margin-left:10px;display:none;">Cancel Download</button>
+                </div>
+            </div>
+            
+            <div id="progressSection" class="progress-section">
+                <div class="progress-text" id="progressText">Preparing download...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-details" style="display: flex; justify-content: space-between; margin-top: 10px; background: #f8f9fa; padding: 10px; border-radius: 5px;">
+                    <div class="progress-stat">
+                        <small style="color: #666; display: block;">Download Speed</small>
+                        <strong id="progressSpeed" style="font-size: 1.1em; color: #2196F3;">--</strong>
+                    </div>
+                    <div class="progress-stat">
+                        <small style="color: #666; display: block;">Time Remaining</small>
+                        <strong id="progressETA" style="font-size: 1.1em; color: #4CAF50;">--</strong>
+                    </div>
+                </div>
+                
+                <div id="downloadComplete" class="download-complete" style="display: none;">
+                    <div class="success">
+                        <strong>✅ Download Complete!</strong>
+                        <p>Your file is ready for download.</p>
+                        <a id="downloadLink" href="#" class="download-link">📥 Download File</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentVideoInfo = null;
+        let selectedFormat = null;
+        let selectedQuality = null;
+        
+        // DOM elements
+        const urlInput = document.getElementById('urlInput');
+        const getInfoBtn = document.getElementById('getInfoBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const videoInfo = document.getElementById('videoInfo');
+        const videoDetails = document.getElementById('videoDetails');
+        const videoFormats = document.getElementById('videoFormats');
+        const audioFormats = document.getElementById('audioFormats');
+        const errorMessage = document.getElementById('errorMessage');
+        const progressSection = document.getElementById('progressSection');
+        const progressText = document.getElementById('progressText');
+        const progressFill = document.getElementById('progressFill');
+        const progressSpeed = document.getElementById('progressSpeed');
+        const progressETA = document.getElementById('progressETA');
+        const downloadComplete = document.getElementById('downloadComplete');
+        const downloadLink = document.getElementById('downloadLink');
+        
+        // Event listeners
+        getInfoBtn.addEventListener('click', getVideoInfo);
+        downloadBtn.addEventListener('click', startDownload);
+        cancelBtn.addEventListener('click', () => {
+            cancelBtn.disabled = true;
+            progressText.textContent = 'Cancelling download...';
+            socket.emit('cancel_download');
+        });
+        
+        // Allow Enter key to trigger get info
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                getVideoInfo();
+            }
+        });
+        
+        async function getVideoInfo() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                showError('Please enter a YouTube URL');
+                return;
+            }
+            
+            getInfoBtn.disabled = true;
+            getInfoBtn.textContent = 'Loading...';
+            hideError();
+            videoInfo.classList.remove('show');
+            
+            try {
+                const response = await fetch('/get_info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    currentVideoInfo = data;
+                    displayVideoInfo(data);
+                }
+            } catch (error) {
+                showError('Failed to get video information: ' + error.message);
+            } finally {
+                getInfoBtn.disabled = false;
+                getInfoBtn.textContent = 'Get Video Info';
+            }
+        }
+        
+        function displayVideoInfo(info) {
+            if (info.is_playlist) {
+                videoDetails.innerHTML = `
+                    <div class="video-title">📋 ${info.title}</div>
+                    <div class="video-details">
+                        <p><strong>Uploader:</strong> ${info.uploader}</p>
+                        <p><strong>Videos:</strong> ${info.video_count}</p>
+                    </div>
+                `;
+                
+                // For playlists, show simple options
+                videoFormats.innerHTML = `
+                    <label class="format-option">
+                        <input type="radio" name="format" value="playlist-video" />
+                        <span>Download as Videos (720p)</span>
+                    </label>
+                `;
+                
+                audioFormats.innerHTML = `
+                    <label class="format-option">
+                        <input type="radio" name="format" value="playlist-audio" />
+                        <span>Download as Audio (320kbps)</span>
+                    </label>
+                `;
+            } else {
+                // Single video
+                const duration = info.duration ? `${Math.floor(info.duration / 60)}:${(info.duration % 60).toString().padStart(2, '0')}` : 'Unknown';
+                const views = info.view_count ? info.view_count.toLocaleString() : 'Unknown';
+                
+                videoDetails.innerHTML = `
+                    ${info.thumbnail ? `<img src="${info.thumbnail}" alt="Thumbnail" class="video-thumbnail" />` : ''}
+                    <div class="video-title">${info.title}</div>
+                    <div class="video-details">
+                        <p><strong>Uploader:</strong> ${info.uploader}</p>
+                        <p><strong>Duration:</strong> ${duration}</p>
+                        <p><strong>Views:</strong> ${views}</p>
+                    </div>
+                `;
+                
+                // Display video formats
+                videoFormats.innerHTML = info.video_formats.map(format => `
+                    <label class="format-option">
+                        <input type="radio" name="format" value="video-${format.resolution}" />
+                        <span>${format.resolution} (${format.ext})</span>
+                    </label>
+                `).join('');
+                
+                // Display audio formats
+                audioFormats.innerHTML = info.audio_formats.map(format => `
+                    <label class="format-option">
+                        <input type="radio" name="format" value="audio-${format.quality}" />
+                        <span>${format.quality} (${format.ext})</span>
+                    </label>
+                `).join('');
+            }
+            
+            // Add event listeners to format options
+            document.querySelectorAll('input[name="format"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const value = e.target.value;
+                    const [type, quality] = value.split('-');
+                    selectedFormat = type;
+                    selectedQuality = quality;
+                });
+            });
+            
+            videoInfo.classList.add('show');
+        }
+        
+        function startDownload() {
+            if (!selectedFormat || !selectedQuality) {
+                showError('Please select a format first');
+                return;
+            }
+            const url = urlInput.value.trim();
+            // Show progress section
+            progressSection.classList.add('show');
+            downloadComplete.style.display = 'none';
+            progressText.textContent = 'Starting download...';
+            progressFill.style.width = '0%';
+            progressSpeed.textContent = 'Speed: --';
+            progressETA.textContent = 'ETA: --';
+            // Disable download button
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'Downloading...';
+            cancelBtn.style.display = 'inline-block';
+            cancelBtn.disabled = false;
+            // Send download request via socket
+            socket.emit('download', {
+                url: url,
+                type: selectedFormat,
+                quality: selectedQuality
+            });
+        }
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Socket event listeners
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+        
+        socket.on('download_started', (data) => {
+            console.log('Download started:', data);
+            progressText.textContent = 'Download started...';
+        });
+        
+        socket.on('download_progress', (data) => {
+            console.log('Progress:', data);
+            if (data.status === 'downloading') {
+                const percent = Math.min(99.9, data.percent); // Cap at 99.9% until finished
+                progressFill.style.width = percent + '%';
+                progressText.textContent = `Downloading... ${percent.toFixed(1)}%`;
+                progressSpeed.textContent = data.speed;
+                progressETA.textContent = data.eta;
+            } else if (data.status === 'finished') {
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Download completed!';
+                progressSpeed.textContent = 'Speed: --';
+                progressETA.textContent = 'ETA: --';
+                // Show download link
+                downloadComplete.style.display = 'block';
+                downloadLink.href = `/download_file/${data.download_id}`;
+                downloadLink.textContent = `📥 Download ${data.filename}`;
+                // Automatically trigger download
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = `/download_file/${data.download_id}`;
+                    link.download = data.filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, 1000);
+                // Re-enable download button
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Start Download';
+                cancelBtn.style.display = 'none';
+            }
+        });
+        
+        socket.on('download_cancelled', () => {
+            // Reset progress display
+            progressText.textContent = 'Download cancelled';
+            progressFill.style.width = '0%';
+            progressSpeed.textContent = '--';
+            progressETA.textContent = '--';
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = 'Start Download';
+            cancelBtn.style.display = 'none';
+            // Hide progress section after a short delay
+            setTimeout(() => {
+                progressSection.classList.remove('show');
+            }, 2000);
+        });
+
+        socket.on('download_error', (data) => {
+            console.error('Download error:', data);
+            showError('Download failed: ' + data.error);
+            // Re-enable download button
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = 'Start Download';
+            cancelBtn.style.display = 'none';
+            // Hide progress section
+            progressSection.classList.remove('show');
+        });
+        
+        socket.on('download_cancelled', () => {
+            progressText.textContent = 'Download cancelled';
+            progressFill.style.width = '0%';
+            progressSpeed.textContent = '--';
+            progressETA.textContent = '--';
+            cancelBtn.style.display = 'none';
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = 'Start Download';
+            downloadComplete.style.display = 'none';
+        });
+        
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+        
+        // Auto-focus URL input
+        urlInput.focus();
+        
+        // Handle paste event
+        urlInput.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                const url = urlInput.value.trim();
+                if (url && (url.includes('youtube.com') || url.includes('youtu.be'))) {
+                    // Auto-trigger get info after paste if it's a YouTube URL
+                    setTimeout(getVideoInfo, 500);
+                }
+            }, 100);
+        });
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Enter or Cmd+Enter to start download
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (selectedFormat && selectedQuality) {
+                    startDownload();
+                }
+            }
+            
+            // Escape to clear/reset
+            if (e.key === 'Escape') {
+                urlInput.value = '';
+                videoInfo.classList.remove('show');
+                progressSection.classList.remove('show');
+                hideError();
+                urlInput.focus();
+            }
+        });
+        
+        // Add format selection shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (videoInfo.classList.contains('show')) {
+                const formats = document.querySelectorAll('input[name="format"]');
+                
+                // Number keys 1-9 to select formats
+                if (e.key >= '1' && e.key <= '9') {
+                    const index = parseInt(e.key) - 1;
+                    if (formats[index]) {
+                        formats[index].checked = true;
+                        formats[index].dispatchEvent(new Event('change'));
+                    }
+                }
+            }
+        });
+        
+        // Add visual feedback for selected format
+        document.addEventListener('change', (e) => {
+            if (e.target.name === 'format') {
+                // Remove previous selection styling
+                document.querySelectorAll('.format-option').forEach(option => {
+                    option.style.background = '';
+                    option.style.borderColor = '#e0e0e0';
+                });
+                
+                // Add styling to selected option
+                const selectedOption = e.target.closest('.format-option');
+                selectedOption.style.background = '#e3f2fd';
+                selectedOption.style.borderColor = '#667eea';
+            }
+        });
+        
+        // Add tooltips for better UX
+        const tooltips = {
+            'urlInput': 'Paste any YouTube video or playlist URL here',
+            'getInfoBtn': 'Click to analyze the video and show available formats',
+            'downloadBtn': 'Start downloading with selected format (Ctrl+Enter)'
+        };
+        
+        Object.entries(tooltips).forEach(([id, text]) => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.title = text;
+            }
+        });
+        
+        // Add loading animation
+        function addLoadingAnimation() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .loading {
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .loading::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -100%;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+                    animation: loading 1.5s infinite;
+                }
+                
+                @keyframes loading {
+                    0% { left: -100%; }
+                    100% { left: 100%; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        addLoadingAnimation();
+        
+        // Enhanced error handling
+        window.addEventListener('error', (e) => {
+            console.error('JavaScript error:', e.error);
+            showError('An unexpected error occurred. Please refresh the page and try again.');
+        });
+        
+        // Connection status indicator
+        let connectionStatus = document.createElement('div');
+        connectionStatus.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            transition: all 0.3s;
+        `;
+        document.body.appendChild(connectionStatus);
+        
+        function updateConnectionStatus(connected) {
+            if (connected) {
+                connectionStatus.textContent = '🟢 Connected';
+                connectionStatus.style.background = '#e8f5e8';
+                connectionStatus.style.color = '#2e7d32';
+            } else {
+                connectionStatus.textContent = '🔴 Disconnected';
+                connectionStatus.style.background = '#ffebee';
+                connectionStatus.style.color = '#c62828';
+            }
+        }
+        
+        socket.on('connect', () => updateConnectionStatus(true));
+        socket.on('disconnect', () => updateConnectionStatus(false));
+        
+        // Initialize connection status
+        updateConnectionStatus(socket.connected);
+        
+        // Add download history (optional feature)
+        let downloadHistory = JSON.parse(localStorage.getItem('downloadHistory') || '[]');
+        
+        function addToHistory(filename, url) {
+            const entry = {
+                filename,
+                url,
+                timestamp: new Date().toISOString(),
+                id: Date.now()
+            };
+            
+            downloadHistory.unshift(entry);
+            downloadHistory = downloadHistory.slice(0, 10); // Keep only last 10
+            localStorage.setItem('downloadHistory', JSON.stringify(downloadHistory));
+        }
+        
+        // Add history to download complete event
+        socket.on('download_progress', (data) => {
+            if (data.status === 'finished') {
+                addToHistory(data.filename, urlInput.value);
+            }
+        });
+        
+        console.log('🎥 YouTube Downloader initialized');
+        console.log('💡 Tips:');
+        console.log('  - Use Ctrl+Enter to start download');
+        console.log('  - Use Escape to clear and reset');
+        console.log('  - Use number keys 1-9 to select formats');
+        console.log('  - Paste YouTube URLs for auto-detection');
+    </script>
+</body>
+</html>

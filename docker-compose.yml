@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  youtube-downloader:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./downloads:/app/downloads
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-super-secret-key-change-this
+      - MAX_DOWNLOADS_PER_HOUR=20
+    restart: unless-stopped
+    
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - youtube-downloader
+    restart: unless-stopped
