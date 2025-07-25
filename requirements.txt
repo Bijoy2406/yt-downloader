@@ -3,3 +3,8 @@ Flask-SocketIO==5.3.6
 yt-dlp==2023.10.13
 python-socketio==5.9.0
 eventlet==0.33.3
+gunicorn==21.2.0
+Werkzeug==2.3.7
+dnspython==2.4.2
+python-engineio>=4.0.0
+six>=1.9.0
