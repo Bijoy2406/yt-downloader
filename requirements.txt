@@ -1,12 +1,20 @@
 Flask==2.3.3
 Flask-SocketIO==5.3.6
 python-socketio==5.9.0
+<<<<<<< HEAD
 python-engineio==4.8.0
+=======
+>>>>>>> c0093cddf9080b86ed85ee3fba2a327513100da2
 eventlet==0.33.3
 gunicorn==21.2.0
 Werkzeug==2.3.7
 dnspython==2.4.2
+<<<<<<< HEAD
 six==1.16.0
 yt-dlp==2023.10.13
 gevent==23.9.1
 gevent-websocket==0.10.1
+=======
+python-engineio>=4.0.0
+six>=1.9.0
+>>>>>>> c0093cddf9080b86ed85ee3fba2a327513100da2

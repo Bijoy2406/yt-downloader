@@ -7,7 +7,11 @@ services:
       apt-get install -y ffmpeg &&
       python -m pip install --upgrade pip &&
       pip install -r requirements.txt
+<<<<<<< HEAD
     startCommand: gunicorn --worker-class eventlet -w 1 --log-level debug --timeout 300 'app:app'
+=======
+    startCommand: gunicorn --worker-class eventlet -w 1 'app:app'
+>>>>>>> c0093cddf9080b86ed85ee3fba2a327513100da2
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
